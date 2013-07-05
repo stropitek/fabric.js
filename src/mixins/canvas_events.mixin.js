@@ -121,7 +121,7 @@
 
       if (this.isDrawingMode && this._isCurrentlyDrawing) {
         this._isCurrentlyDrawing = false;
-        this.freeDrawingBrush.onMouseUp();
+        //this.freeDrawingBrush.onMouseUp();
         this.fire('mouse:up', { e: e });
         return;
       }
@@ -201,7 +201,7 @@
         pointer = this.getPointer(e);
         this._isCurrentlyDrawing = true;
         this.discardActiveObject().renderAll();
-        this.freeDrawingBrush.onMouseDown(pointer);
+        //this.freeDrawingBrush.onMouseDown(pointer);
         this.fire('mouse:down', { e: e });
         return;
       }
@@ -272,7 +272,7 @@
       if (this.isDrawingMode) {
         if (this._isCurrentlyDrawing) {
           pointer = this.getPointer(e);
-          this.freeDrawingBrush.onMouseMove(pointer);
+          //this.freeDrawingBrush.onMouseMove(pointer);
         }
         this.upperCanvasEl.style.cursor = this.freeDrawingCursor;
         this.fire('mouse:move', { e: e });
