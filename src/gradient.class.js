@@ -181,7 +181,7 @@
 
     /**
      * Returns an instance of CanvasGradient
-     * @param ctx
+     * @param {CanvasRenderingContext2D} ctx Context to render on
      * @return {CanvasGradient}
      */
     toLive: function(ctx) {
@@ -220,6 +220,9 @@
      * Returns {@link fabric.Gradient} instance from an SVG element
      * @static
      * @memberof fabric.Gradient
+     * @param {SVGGradientElement} el SVG gradient element
+     * @param {fabric.Object} instance
+     * @return {fabric.Gradient} Gradient instance
      * @see http://www.w3.org/TR/SVG/pservers.html#LinearGradientElement
      * @see http://www.w3.org/TR/SVG/pservers.html#RadialGradientElement
      */
@@ -301,9 +304,9 @@
     /**
      * Returns {@link fabric.Gradient} instance from its object representation
      * @static
+     * @memberof fabric.Gradient
      * @param {Object} obj
      * @param {Object} [options] Options object
-     * @memberof fabric.Gradient
      */
     forObject: function(obj, options) {
       options || (options = { });
