@@ -22,8 +22,9 @@
       var lowerCanvasClass = this.canvas.lowerCanvasEl.className.replace(/\s*lower-canvas\s*/, '');
       this.brushCanvasEl = this.canvas._createCanvasElement();
       fabric.util.addClass(this.brushCanvasEl, 'upper-canvas ' + lowerCanvasClass);
-      this.canvas.wrapperEl.insertBefore(this.brushCanvasEl, this.canvas.wrapperEl.firstChild);
+      // this.canvas.wrapperEl.insertBefore(this.brushCanvasEl, this.canvas.wrapperEl.firstChild);
       // this.canvas.wrapperEl.appendChild(this.brushCanvasEl);
+      this.canvas.wrapperEl.insertBefore(this.brushCanvasEl, this.canvas.upperCanvasEl);
       this.canvas._copyCanvasStyle(this.canvas.lowerCanvasEl, this.brushCanvasEl);
       this.canvas._applyCanvasStyle(this.brushCanvasEl);
       this.contextBrush = this.brushCanvasEl.getContext('2d');
@@ -267,6 +268,7 @@
 
       var path = this.createPath(pathData);
       path.set({ left: originLeft, top: originTop });
+      path.userId = this.userId;
 
       this.canvas.add(path);
       path.setCoords();
