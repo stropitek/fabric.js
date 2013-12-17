@@ -31,6 +31,9 @@
       this._createCacheCanvas();
 
       fabric.Canvas.activeInstance = this;
+      
+      // Additional property for app-specific purpose
+      this.isAltFreehandMode = false;
     },
 
     /**

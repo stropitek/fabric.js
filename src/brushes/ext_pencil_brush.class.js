@@ -30,6 +30,10 @@
       this.contextBrush = this.brushCanvasEl.getContext('2d');
       
     },
+    
+    destroy: function() {
+      this.brushCanvasEl.parentNode.removeChild(this.brushCanvasEl);
+    },
 
     /**
      * Inovoked on mouse down
@@ -115,6 +119,7 @@
      */
     _render: function() {
       var ctx  = this.contextBrush;
+      ctx.lineWidth=this.width;
       ctx.beginPath();
 
       var p1 = this._points[0];
@@ -203,13 +208,37 @@
       var p1 = new fabric.Point(points[0].x - minX, points[0].y - minY);
       var p2 = new fabric.Point(points[1].x - minX, points[1].y - minY);
 
+      if(points[0].y - minY <0) {
+        console.log('Brush error: y diff is ', points[0].y - minY);
+        ponits[0].y = minY;;
+      }
+      if(points[0].x - minX <0) {
+        console.log('Brush error: x diff is ', points[0].x - minX);
+        points[0].x = minX;
+      }
+      
       path.push('M ', points[0].x - minX, ' ', points[0].y - minY, ' ');
       for (var i = 1, len = points.length; i < len; i++) {
+        // This variable is to patch a bug that occurs when 
+        // Some of the points in 'points' are smaller than
+        // (minX, minY). I don't know what the source of the
+        // problem is. Would be good to investigate.
+        var patherr = false;
+        if(points[i].x - minX <0) {
+          patherr = true;
+          points[i].x = minX;
+        }
+        if(points[i].y - minY <0) {
+          patherr = true;
+          points[i].y = minY;
+        }
+        
         var midPoint = p1.midPointFrom(p2);
         // p1 is our bezier control point
         // midpoint is our endpoint
         // start point is p(i-1) value.
-        path.push('Q ', p1.x, ' ', p1.y, ' ', midPoint.x, ' ', midPoint.y, ' ');
+        if(!patherr) // patch: ignore point if outside of bounding box
+          path.push('Q ', p1.x, ' ', p1.y, ' ', midPoint.x, ' ', midPoint.y, ' ');
         p1 = new fabric.Point(points[i].x - minX, points[i].y - minY);
         if ((i+1) < points.length) {
           p2 = new fabric.Point(points[i+1].x - minX, points[i+1].y - minY);
