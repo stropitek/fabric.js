@@ -296,7 +296,12 @@
       this.contextBrush.arc(originLeft, originTop, 3, 0, Math.PI * 2, false);
 
       var path = this.createPath(pathData);
-      path.set({ left: originLeft, top: originTop });
+      path.set({
+        left: originLeft,
+        top: originTop,
+        originX: 'center',
+        originY: 'center'
+      });
       path.userId = this.userId;
 
       this.canvas.add(path);

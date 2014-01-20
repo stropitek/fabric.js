@@ -6178,7 +6178,9 @@ fabric.PatternBrush = fabric.util.createClass(fabric.PencilBrush, {
             var path = this.createPath(pathData);
             path.set({
                 left: originLeft,
-                top: originTop
+                top: originTop,
+                originX: "center",
+                originY: "center"
             });
             path.userId = this.userId;
             this.canvas.add(path);
