@@ -80,6 +80,21 @@ fabric.Collection = {
   },
 
   /**
+   * Returns an array of children objects of this instance
+   * Type parameter introduced in 1.3.10
+   * @param {String} [type] When specified, only objects of this type are returned
+   * @return {Array}
+   */
+  getObjects: function(type) {
+    if (typeof type === 'undefined') {
+      return this._objects;
+    }
+    return this._objects.filter(function(o) {
+      return o.type === type;
+    });
+  },
+
+  /**
    * Returns object at specified index
    * @param {Number} index
    * @return {Self} thisArg
@@ -122,15 +137,5 @@ fabric.Collection = {
       memo += current.complexity ? current.complexity() : 0;
       return memo;
     }, 0);
-  },
-
-  /**
-   * Makes all of the collection objects grayscale (i.e. calling `toGrayscale` on them)
-   * @return {Self} thisArg
-   */
-  toGrayscale: function() {
-    return this.forEachObject(function(obj) {
-      obj.toGrayscale();
-    });
   }
 };

@@ -17,6 +17,8 @@
    * Image class
    * @class fabric.Image
    * @extends fabric.Object
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-1/#images}
+   * @see {@link fabric.Image#initialize} for constructor definition
    */
   fabric.Image = fabric.util.createClass(fabric.Object, /** @lends fabric.Image.prototype */ {
 
@@ -26,6 +28,14 @@
      * @default
      */
     type: 'image',
+
+    /**
+     * crossOrigin value (one of "", "anonymous", "allow-credentials")
+     * @see https://developer.mozilla.org/en-US/docs/HTML/CORS_settings_attributes
+     * @type String
+     * @default
+     */
+    crossOrigin: '',
 
     /**
      * Constructor
@@ -39,7 +49,8 @@
       this.filters = [ ];
 
       this.callSuper('initialize', options);
-      this._initElement(element);
+
+      this._initElement(element, options);
       this._initConfig(options);
 
       if (options.filters) {
@@ -78,6 +89,18 @@
     },
 
     /**
+     * Sets crossOrigin value (on an instance and corresponding image element)
+     * @return {fabric.Image} thisArg
+     * @chainable
+     */
+    setCrossOrigin: function(value) {
+      this.crossOrigin = value;
+      this._element.crossOrigin = value;
+
+      return this;
+    },
+
+    /**
      * Returns original size of an image
      * @return {Object} Object with "width" and "height" properties
      */
@@ -100,7 +123,7 @@
 
       ctx.save();
       var m = this.transformMatrix;
-      var isInPathGroup = this.group && this.group.type !== 'group';
+      var isInPathGroup = this.group && this.group.type === 'path-group';
 
       // this._resetWidthHeight();
       if (isInPathGroup) {
@@ -137,14 +160,7 @@
      */
     _stroke: function(ctx) {
       ctx.save();
-      ctx.lineWidth = this.strokeWidth;
-      ctx.lineCap = this.strokeLineCap;
-      ctx.lineJoin = this.strokeLineJoin;
-      ctx.miterLimit = this.strokeMiterLimit;
-      ctx.strokeStyle = this.stroke.toLive
-        ? this.stroke.toLive(ctx)
-        : this.stroke;
-
+      this._setStrokeStyles(ctx);
       ctx.beginPath();
       ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
       ctx.closePath();
@@ -162,13 +178,7 @@
          h = this.height;
 
       ctx.save();
-      ctx.lineWidth = this.strokeWidth;
-      ctx.lineCap = this.strokeLineCap;
-      ctx.lineJoin = this.strokeLineJoin;
-      ctx.miterLimit = this.strokeMiterLimit;
-      ctx.strokeStyle = this.stroke.toLive
-        ? this.stroke.toLive(ctx)
-        : this.stroke;
+      this._setStrokeStyles(ctx);
 
       ctx.beginPath();
       fabric.util.drawDashedLine(ctx, x, y, x+w, y, this.strokeDashArray);
@@ -181,7 +191,7 @@
 
     /**
      * Returns object representation of an instance
-     * @param {Array} propertiesToInclude Any properties that you might want to additionally include in the output
+     * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
      * @return {Object} Object representation of an instance
      */
     toObject: function(propertiesToInclude) {
@@ -189,16 +199,18 @@
         src: this._originalElement.src || this._originalElement._src,
         filters: this.filters.map(function(filterObj) {
           return filterObj && filterObj.toObject();
-        })
+        }),
+        crossOrigin: this.crossOrigin
       });
     },
 
     /* _TO_SVG_START_ */
     /**
      * Returns SVG representation of an instance
+     * @param {Function} [reviver] Method for further parsing of svg representation.
      * @return {String} svg representation of an instance
      */
-    toSVG: function() {
+    toSVG: function(reviver) {
       var markup = [];
 
       markup.push(
@@ -211,7 +223,8 @@
             '" transform="translate(' + (-this.width/2) + ' ' + (-this.height/2) + ')',
             '" width="', this.width,
             '" height="', this.height,
-          '"></image>'
+            '" preserveAspectRatio="none"',
+          '></image>'
       );
 
       if (this.stroke || this.strokeDashArray) {
@@ -229,7 +242,7 @@
 
       markup.push('</g>');
 
-      return markup.join('');
+      return reviver ? reviver(markup.join('')) : markup.join('');
     },
     /* _TO_SVG_END_ */
 
@@ -252,7 +265,7 @@
     /**
      * Returns a clone of an instance
      * @param {Function} callback Callback is invoked with a clone as a first argument
-     * @param {Array} propertiesToInclude Any properties that you might want to additionally include in the output
+     * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
      */
     clone: function(callback, propertiesToInclude) {
       this.constructor.fromObject(this.toObject(propertiesToInclude), callback);
@@ -354,6 +367,7 @@
       options || (options = { });
       this.setOptions(options);
       this._setWidthHeight(options);
+      this._element.crossOrigin = this.crossOrigin;
     },
 
     /**
@@ -416,28 +430,13 @@
    * @param {Function} [callback] Callback to invoke when an image instance is created
    */
   fabric.Image.fromObject = function(object, callback) {
-    var img = fabric.document.createElement('img'),
-        src = object.src;
-
-    /** @ignore */
-    img.onload = function() {
+    fabric.util.loadImage(object.src, function(img) {
       fabric.Image.prototype._initFilters.call(object, object, function(filters) {
         object.filters = filters || [ ];
-
         var instance = new fabric.Image(img, object);
         callback && callback(instance);
-        img = img.onload = img.onerror = null;
       });
-    };
-
-    /** @ignore */
-    img.onerror = function() {
-      fabric.log('Error loading ' + img.src);
-      callback && callback(null, true);
-      img = img.onload = img.onerror = null;
-    };
-
-    img.src = src;
+    }, null, object.crossOrigin);
   };
 
   /**
@@ -450,7 +449,7 @@
   fabric.Image.fromURL = function(url, callback, imgOptions) {
     fabric.util.loadImage(url, function(img) {
       callback(new fabric.Image(img, imgOptions));
-    });
+    }, null, imgOptions && imgOptions.crossOrigin);
   };
 
   /* _FROM_SVG_START_ */

@@ -11,13 +11,14 @@
   }
 
   var stateProperties = fabric.Object.prototype.stateProperties.concat();
-  stateProperties.push('rx', 'ry');
+  stateProperties.push('rx', 'ry', 'x', 'y');
 
   /**
    * Rectangle class
    * @class fabric.Rect
    * @extends fabric.Object
    * @return {fabric.Rect} thisArg
+   * @see {@link fabric.Rect#initialize} for constructor definition
    */
   fabric.Rect = fabric.util.createClass(fabric.Object, /** @lends fabric.Rect.prototype */ {
 
@@ -48,6 +49,18 @@
      * @default
      */
     ry:   0,
+
+    /**
+     * @type Number
+     * @default
+     */
+    x: 0,
+
+    /**
+     * @type Number
+     * @default
+     */
+    y: 0,
 
     /**
      * Used to specify dash pattern for stroke on this object
@@ -94,7 +107,7 @@
           y = -this.height / 2,
           w = this.width,
           h = this.height,
-          isInPathGroup = this.group && this.group.type !== 'group';
+          isInPathGroup = this.group && this.group.type === 'path-group';
 
       ctx.beginPath();
       ctx.globalAlpha = isInPathGroup ? (ctx.globalAlpha * this.opacity) : this.opacity;
@@ -163,24 +176,29 @@
 
     /**
      * Returns object representation of an instance
-     * @param {Array} propertiesToInclude
+     * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
      * @return {Object} object representation of an instance
      */
     toObject: function(propertiesToInclude) {
-      return extend(this.callSuper('toObject', propertiesToInclude), {
+      var object = extend(this.callSuper('toObject', propertiesToInclude), {
         rx: this.get('rx') || 0,
         ry: this.get('ry') || 0,
         x: this.get('x'),
         y: this.get('y')
       });
+      if (!this.includeDefaultValues) {
+        this._removeDefaultValues(object);
+      }
+      return object;
     },
 
     /* _TO_SVG_START_ */
     /**
      * Returns svg representation of an instance
+     * @param {Function} [reviver] Method for further parsing of svg representation.
      * @return {String} svg representation of an instance
      */
-    toSVG: function() {
+    toSVG: function(reviver) {
       var markup = this._createBaseSVGMarkup();
 
       markup.push(
@@ -193,7 +211,7 @@
         '"/>'
       );
 
-      return markup.join('');
+      return reviver ? reviver(markup.join('')) : markup.join('');
     },
     /* _TO_SVG_END_ */
 

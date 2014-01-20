@@ -10,6 +10,14 @@
    * @class fabric.Image.filters.Pixelate
    * @memberOf fabric.Image.filters
    * @extends fabric.Image.filters.BaseFilter
+   * @see {@link fabric.Image.filters.Pixelate#initialize} for constructor definition
+   * @see {@link http://fabricjs.com/image-filters/|ImageFilters demo}
+   * @example
+   * var filter = new fabric.Image.filters.Pixelate({
+   *   blocksize: 8
+   * });
+   * object.filters.push(filter);
+   * object.applyFilters(canvas.renderAll.bind(canvas));
    */
   fabric.Image.filters.Pixelate = fabric.util.createClass(fabric.Image.filters.BaseFilter, /** @lends fabric.Image.filters.Pixelate.prototype */ {
 
@@ -24,6 +32,7 @@
      * Constructor
      * @memberOf fabric.Image.filters.Pixelate.prototype
      * @param {Object} [options] Options object
+     * @param {Number} [options.blocksize=4] Blocksize for pixelate
      */
     initialize: function(options) {
       options = options || { };

@@ -14,6 +14,7 @@
    * @class fabric.Triangle
    * @extends fabric.Object
    * @return {fabric.Triangle} thisArg
+   * @see {@link fabric.Triangle#initialize} for constructor definition
    */
   fabric.Triangle = fabric.util.createClass(fabric.Object, /** @lends fabric.Triangle.prototype */ {
 
@@ -74,9 +75,10 @@
     /* _TO_SVG_START_ */
     /**
      * Returns SVG representation of an instance
+     * @param {Function} [reviver] Method for further parsing of svg representation.
      * @return {String} svg representation of an instance
      */
-    toSVG: function() {
+    toSVG: function(reviver) {
       var markup = this._createBaseSVGMarkup(),
           widthBy2 = this.width / 2,
           heightBy2 = this.height / 2;
@@ -95,7 +97,7 @@
         '"/>'
       );
 
-      return markup.join('');
+      return reviver ? reviver(markup.join('')) : markup.join('');
     },
     /* _TO_SVG_END_ */
 

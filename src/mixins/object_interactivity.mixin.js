@@ -1,12 +1,19 @@
 (function(){
 
   var getPointer = fabric.util.getPointer,
-      degreesToRadians = fabric.util.degreesToRadians;
+      degreesToRadians = fabric.util.degreesToRadians,
+      isVML = typeof G_vmlCanvasManager !== 'undefined';
 
   fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prototype */ {
 
     /**
-     * Determines which one of the four corners has been clicked
+     * The object interactivity controls.
+     * @private
+     */
+    _controlsVisibility: null,
+
+    /**
+     * Determines which corner has been clicked
      * @private
      * @param {Event} e Event object
      * @param {Object} offset Canvas offset
@@ -22,6 +29,10 @@
           lines;
 
       for (var i in this.oCoords) {
+
+        if (!this.isControlVisible(i)) {
+          continue;
+        }
 
         if (i === 'mtr' && !this.hasRotatingPoint) {
           continue;
@@ -279,7 +290,7 @@
         ~~(h + padding2 + strokeWidth * this.scaleY) + 1
       );
 
-      if (this.hasRotatingPoint && !this.get('lockRotation') && this.hasControls) {
+      if (this.hasRotatingPoint && this.isControlVisible('mtr') && !this.get('lockRotation') && this.hasControls) {
 
         var rotateHeight = (
           this.flipY
@@ -314,10 +325,6 @@
           strokeWidth2 = ~~(this.strokeWidth / 2), // half strokeWidth rounded down
           left = -(this.width / 2),
           top = -(this.height / 2),
-          _left,
-          _top,
-          sizeX = size / this.scaleX,
-          sizeY = size / this.scaleY,
           paddingX = this.padding / this.scaleX,
           paddingY = this.padding / this.scaleY,
           scaleOffsetY = size2 / this.scaleY,
@@ -326,9 +333,7 @@
           scaleOffsetSizeY = (size2 - size) / this.scaleY,
           height = this.height,
           width = this.width,
-          methodName = this.transparentCorners ? 'strokeRect' : 'fillRect',
-          transparent = this.transparentCorners,
-          isVML = typeof G_vmlCanvasManager !== 'undefined';
+          methodName = this.transparentCorners ? 'strokeRect' : 'fillRect';
 
       ctx.save();
 
@@ -338,78 +343,140 @@
       ctx.strokeStyle = ctx.fillStyle = this.cornerColor;
 
       // top-left
-      _left = left - scaleOffsetX - strokeWidth2 - paddingX;
-      _top = top - scaleOffsetY - strokeWidth2 - paddingY;
-
-      isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-      ctx[methodName](_left, _top, sizeX, sizeY);
+      this._drawControl('tl', ctx, methodName,
+        left - scaleOffsetX - strokeWidth2 - paddingX,
+        top - scaleOffsetY - strokeWidth2 - paddingY);
 
       // top-right
-      _left = left + width - scaleOffsetX + strokeWidth2 + paddingX;
-      _top = top - scaleOffsetY - strokeWidth2 - paddingY;
-
-      isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-      ctx[methodName](_left, _top, sizeX, sizeY);
+      this._drawControl('tr', ctx, methodName,
+        left + width - scaleOffsetX + strokeWidth2 + paddingX,
+        top - scaleOffsetY - strokeWidth2 - paddingY);
 
       // bottom-left
-      _left = left - scaleOffsetX - strokeWidth2 - paddingX;
-      _top = top + height + scaleOffsetSizeY + strokeWidth2 + paddingY;
-
-      isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-      ctx[methodName](_left, _top, sizeX, sizeY);
+      this._drawControl('tr', ctx, methodName,
+        left - scaleOffsetX - strokeWidth2 - paddingX,
+        top + height + scaleOffsetSizeY + strokeWidth2 + paddingY);
 
       // bottom-right
-      _left = left + width + scaleOffsetSizeX + strokeWidth2 + paddingX;
-      _top = top + height + scaleOffsetSizeY + strokeWidth2 + paddingY;
-
-      isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-      ctx[methodName](_left, _top, sizeX, sizeY);
+      this._drawControl('br', ctx, methodName,
+        left + width + scaleOffsetSizeX + strokeWidth2 + paddingX,
+        top + height + scaleOffsetSizeY + strokeWidth2 + paddingY);
 
       if (!this.get('lockUniScaling')) {
-        // middle-top
-        _left = left + width/2 - scaleOffsetX;
-        _top = top - scaleOffsetY - strokeWidth2 - paddingY;
 
-        isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-        ctx[methodName](_left, _top, sizeX, sizeY);
+        // middle-top
+        this._drawControl('mt', ctx, methodName,
+          left + width/2 - scaleOffsetX,
+          top - scaleOffsetY - strokeWidth2 - paddingY);
 
         // middle-bottom
-        _left = left + width/2 - scaleOffsetX;
-        _top = top + height + scaleOffsetSizeY + strokeWidth2 + paddingY;
-
-        isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-        ctx[methodName](_left, _top, sizeX, sizeY);
+        this._drawControl('mb', ctx, methodName,
+          left + width/2 - scaleOffsetX,
+          top + height + scaleOffsetSizeY + strokeWidth2 + paddingY);
 
         // middle-right
-        _left = left + width + scaleOffsetSizeX + strokeWidth2 + paddingX;
-        _top = top + height/2 - scaleOffsetY;
-
-        isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-        ctx[methodName](_left, _top, sizeX, sizeY);
+        this._drawControl('mb', ctx, methodName,
+          left + width + scaleOffsetSizeX + strokeWidth2 + paddingX,
+          top + height/2 - scaleOffsetY);
 
         // middle-left
-        _left = left - scaleOffsetX - strokeWidth2 - paddingX;
-        _top = top + height/2 - scaleOffsetY;
-
-        isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-        ctx[methodName](_left, _top, sizeX, sizeY);
+        this._drawControl('ml', ctx, methodName,
+          left - scaleOffsetX - strokeWidth2 - paddingX,
+          top + height/2 - scaleOffsetY);
       }
 
       // middle-top-rotate
       if (this.hasRotatingPoint) {
-
-        _left = left + width/2 - scaleOffsetX;
-        _top = this.flipY ?
-          (top + height + (this.rotatingPointOffset / this.scaleY) - sizeY/2 + strokeWidth2 + paddingY)
-          : (top - (this.rotatingPointOffset / this.scaleY) - sizeY/2 - strokeWidth2 - paddingY);
-
-        isVML || transparent || ctx.clearRect(_left, _top, sizeX, sizeY);
-        ctx[methodName](_left, _top, sizeX, sizeY);
+        this._drawControl('mtr', ctx, methodName,
+          left + width/2 - scaleOffsetX,
+          this.flipY
+            ? (top + height + (this.rotatingPointOffset / this.scaleY) - this.cornerSize/this.scaleX/2 + strokeWidth2 + paddingY)
+            : (top - (this.rotatingPointOffset / this.scaleY) - this.cornerSize/this.scaleY/2 - strokeWidth2 - paddingY));
       }
 
       ctx.restore();
 
       return this;
+    },
+
+    /**
+     * @private
+     */
+    _drawControl: function(control, ctx, methodName, left, top) {
+      var sizeX = this.cornerSize / this.scaleX,
+          sizeY = this.cornerSize / this.scaleY;
+
+      if (this.isControlVisible(control)) {
+        isVML || this.transparentCorners || ctx.clearRect(left, top, sizeX, sizeY);
+        ctx[methodName](left, top, sizeX, sizeY);
+      }
+    },
+
+    /**
+     * Returns true if the specified control is visible, false otherwise.
+     * @param {String} controlName The name of the control. Possible values are 'tl', 'tr', 'br', 'bl', 'ml', 'mt', 'mr', 'mb', 'mtr'.
+     * @returns {Boolean} true if the specified control is visible, false otherwise
+     */
+    isControlVisible: function(controlName) {
+      return this._getControlsVisibility()[controlName];
+    },
+
+    /**
+     * Sets the visibility of the specified control.
+     * @param {String} controlName The name of the control. Possible values are 'tl', 'tr', 'br', 'bl', 'ml', 'mt', 'mr', 'mb', 'mtr'.
+     * @param {Boolean} visible true to set the specified control visible, false otherwise
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+    setControlVisible: function(controlName, visible) {
+      this._getControlsVisibility()[controlName] = visible;
+      return this;
+    },
+
+    /**
+     * Sets the visibility state of object controls.
+     * @param {Object} [options] Options object
+     * @param {Boolean} [options.bl] true to enable the bottom-left control, false to disable it
+     * @param {Boolean} [options.br] true to enable the bottom-right control, false to disable it
+     * @param {Boolean} [options.mb] true to enable the middle-bottom control, false to disable it
+     * @param {Boolean} [options.ml] true to enable the middle-left control, false to disable it
+     * @param {Boolean} [options.mr] true to enable the middle-right control, false to disable it
+     * @param {Boolean} [options.mt] true to enable the middle-top control, false to disable it
+     * @param {Boolean} [options.tl] true to enable the top-left control, false to disable it
+     * @param {Boolean} [options.tr] true to enable the top-right control, false to disable it
+     * @param {Boolean} [options.mtr] true to enable the middle-top-rotate control, false to disable it
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+    setControlsVisibility: function(options) {
+      options || (options = { });
+
+      for (var p in options) {
+        this.setControlVisible(p, options[p]);
+      }
+      return this;
+    },
+
+    /**
+     * Returns the instance of the control visibility set for this object.
+     * @private
+     * @returns {Object}
+     */
+    _getControlsVisibility: function() {
+      if (!this._controlsVisibility) {
+        this._controlsVisibility = {
+            tl: true,
+            tr: true,
+            br: true,
+            bl: true,
+            ml: true,
+            mt: true,
+            mr: true,
+            mb: true,
+            mtr: true
+        };
+      }
+      return this._controlsVisibility;
     }
   });
 })();

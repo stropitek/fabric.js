@@ -1,31 +1,42 @@
 fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.StaticCanvas.prototype */ {
 
   /**
-   * Populates canvas with data from the specified dataless JSON
-   * JSON format must conform to the one of `fabric.Canvas#toDatalessJSON`
+   * Populates canvas with data from the specified dataless JSON.
+   * JSON format must conform to the one of {@link fabric.Canvas#toDatalessJSON}
    * @deprecated since 1.2.2
    * @param {String|Object} json JSON string or object
    * @param {Function} callback Callback, invoked when json is parsed
-   *                            and corresponding objects (e.g: fabric.Image)
+   *                            and corresponding objects (e.g: {@link fabric.Image})
    *                            are initialized
    * @param {Function} [reviver] Method for further parsing of JSON elements, called after each fabric object created.
    * @return {fabric.Canvas} instance
    * @chainable
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-3/#deserialization}
    */
   loadFromDatalessJSON: function (json, callback, reviver) {
     return this.loadFromJSON(json, callback, reviver);
   },
 
   /**
-   * Populates canvas with data from the specified JSON
-   * JSON format must conform to the one of `fabric.Canvas#toJSON`
+   * Populates canvas with data from the specified JSON.
+   * JSON format must conform to the one of {@link fabric.Canvas#toJSON}
    * @param {String|Object} json JSON string or object
    * @param {Function} callback Callback, invoked when json is parsed
-   *                            and corresponding objects (e.g: fabric.Image)
+   *                            and corresponding objects (e.g: {@link fabric.Image})
    *                            are initialized
    * @param {Function} [reviver] Method for further parsing of JSON elements, called after each fabric object created.
    * @return {fabric.Canvas} instance
    * @chainable
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-3/#deserialization}
+   * @see {@link http://jsfiddle.net/fabricjs/fmgXt/|jsFiddle demo}
+   * @example <caption>loadFromJSON</caption>
+   * canvas.loadFromJSON(json, canvas.renderAll.bind(canvas));
+   * @example <caption>loadFromJSON with reviver</caption>
+   * canvas.loadFromJSON(json, canvas.renderAll.bind(canvas), function(o, object) {
+   *   // `o` = json object
+   *   // `object` = fabric.Object instance
+   *   // ... do some stuff ...
+   * });
    */
   loadFromJSON: function (json, callback, reviver) {
     if (!json) return;
@@ -39,71 +50,73 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
 
     var _this = this;
     this._enlivenObjects(serialized.objects, function () {
-      _this._setBgOverlayImages(serialized, callback);
+      _this._setBgOverlay(serialized, callback);
     }, reviver);
 
     return this;
   },
 
-  _setBgOverlayImages: function(serialized, callback) {
-
+  /**
+   * @private
+   * @param {Object} serialized Object with background and overlay information
+   * @param {Function} callback Invoked after all background and overlay images/patterns loaded
+   */
+  _setBgOverlay: function(serialized, callback) {
     var _this = this,
-        backgroundPatternLoaded,
-        backgroundImageLoaded,
-        overlayImageLoaded;
+        loaded = {
+          backgroundColor: false,
+          overlayColor: false,
+          backgroundImage: false,
+          overlayImage: false
+        };
+
+    if (!serialized.backgroundImage && !serialized.overlayImage && !serialized.background && !serialized.overlay) {
+      callback && callback();
+      return;
+    }
 
     var cbIfLoaded = function () {
-      callback && backgroundImageLoaded && overlayImageLoaded && backgroundPatternLoaded && callback();
+      if (loaded.backgroundImage && loaded.overlayImage && loaded.backgroundColor && loaded.overlayColor) {
+        _this.renderAll();
+        callback && callback();
+      }
     };
 
-    if (serialized.backgroundImage) {
-      this.setBackgroundImage(serialized.backgroundImage, function() {
+    this.__setBgOverlay('backgroundImage', serialized.backgroundImage, loaded, cbIfLoaded);
+    this.__setBgOverlay('overlayImage', serialized.overlayImage, loaded, cbIfLoaded);
+    this.__setBgOverlay('backgroundColor', serialized.background, loaded, cbIfLoaded);
+    this.__setBgOverlay('overlayColor', serialized.overlay, loaded, cbIfLoaded);
 
-        _this.backgroundImageOpacity = serialized.backgroundImageOpacity;
-        _this.backgroundImageStretch = serialized.backgroundImageStretch;
+    cbIfLoaded();
+  },
 
-        _this.renderAll();
+  /**
+   * @private
+   * @param {String} property Property to set (backgroundImage, overlayImage, backgroundColor, overlayColor)
+   * @param {(Object|String)} value Value to set
+   * @param {Object} loaded Set loaded property to true if property is set
+   * @param {Object} callback Callback function to invoke after property is set
+   */
+  __setBgOverlay: function(property, value, loaded, callback) {
+    var _this = this;
 
-        backgroundImageLoaded = true;
+    if (!value) {
+      loaded[property] = true;
+      return;
+    }
 
-        cbIfLoaded();
+    if (property === 'backgroundImage' || property === 'overlayImage') {
+      fabric.Image.fromObject(value, function(img) {
+        _this[property] = img;
+        loaded[property] = true;
+        callback && callback();
       });
     }
     else {
-      backgroundImageLoaded = true;
-    }
-
-    if (serialized.overlayImage) {
-      this.setOverlayImage(serialized.overlayImage, function() {
-
-        _this.overlayImageLeft = serialized.overlayImageLeft || 0;
-        _this.overlayImageTop = serialized.overlayImageTop || 0;
-
-        _this.renderAll();
-        overlayImageLoaded = true;
-
-        cbIfLoaded();
+      this['set' + fabric.util.string.capitalize(property, true)](value, function() {
+        loaded[property] = true;
+        callback && callback();
       });
-    }
-    else {
-      overlayImageLoaded = true;
-    }
-
-    if (serialized.background) {
-      this.setBackgroundColor(serialized.background, function() {
-
-        _this.renderAll();
-        backgroundPatternLoaded = true;
-
-        cbIfLoaded();
-      });
-    }
-    else {
-      backgroundPatternLoaded = true;
-    }
-
-    if (!serialized.backgroundImage && !serialized.overlayImage && !serialized.background) {
-      callback && callback();
     }
   },
 
@@ -159,9 +172,10 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
   /**
    * Clones canvas instance
    * @param {Object} [callback] Receives cloned instance as a first argument
+   * @param {Array} [properties] Array of properties to include in the cloned canvas and children
    */
-  clone: function (callback) {
-    var data = JSON.stringify(this);
+  clone: function (callback, properties) {
+    var data = JSON.stringify(this.toJSON(properties));
     this.cloneWithoutData(function(clone) {
       clone.loadFromJSON(data, function() {
         callback && callback(clone);

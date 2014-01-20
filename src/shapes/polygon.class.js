@@ -17,6 +17,7 @@
    * Polygon class
    * @class fabric.Polygon
    * @extends fabric.Object
+   * @see {@link fabric.Polygon#initialize} for constructor definition
    */
   fabric.Polygon = fabric.util.createClass(fabric.Object, /** @lends fabric.Polygon.prototype */ {
 
@@ -85,9 +86,10 @@
     /* _TO_SVG_START_ */
     /**
      * Returns svg representation of an instance
+     * @param {Function} [reviver] Method for further parsing of svg representation.
      * @return {String} svg representation of an instance
      */
-    toSVG: function() {
+    toSVG: function(reviver) {
       var points = [],
           markup = this._createBaseSVGMarkup();
 
@@ -103,7 +105,7 @@
         '"/>'
       );
 
-      return markup.join('');
+      return reviver ? reviver(markup.join('')) : markup.join('');
     },
     /* _TO_SVG_END_ */
 
@@ -175,18 +177,9 @@
     options || (options = { });
 
     var points = fabric.parsePointsAttribute(element.getAttribute('points')),
-        parsedAttributes = fabric.parseAttributes(element, fabric.Polygon.ATTRIBUTE_NAMES),
-        minX = min(points, 'x'),
-        minY = min(points, 'y');
+        parsedAttributes = fabric.parseAttributes(element, fabric.Polygon.ATTRIBUTE_NAMES);
 
-    minX = minX < 0 ? minX : 0;
-    minY = minX < 0 ? minY : 0;
-
-    for (var i = 0, len = points.length; i < len; i++) {
-      // normalize coordinates, according to containing box (dimensions of which are passed via `options`)
-      points[i].x -= (options.width / 2 + minX) || 0;
-      points[i].y -= (options.height / 2 + minY) || 0;
-    }
+    fabric.util.normalizePoints(points, options);
 
     return new fabric.Polygon(points, extend(parsedAttributes, options), true);
   };

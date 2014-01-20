@@ -16,8 +16,285 @@
   /**
    * Root object class from which all 2d shape classes inherit from
    * @class fabric.Object
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-1/#objects}
+   * @see {@link fabric.Object#initialize} for constructor definition
+   *
+   * @fires added
+   * @fires removed
+   *
+   * @fires selected
+   * @fires modified
+   * @fires rotating
+   * @fires scaling
+   * @fires moving
+   *
+   * @fires mousedown
+   * @fires mouseup
    */
   fabric.Object = fabric.util.createClass(/** @lends fabric.Object.prototype */ {
+
+    /**
+     * Retrieves object's {@link fabric.Object#clipTo|clipping function}
+     * @method getClipTo
+     * @memberOf fabric.Object.prototype
+     * @return {Function}
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#clipTo|clipping function}
+     * @method setClipTo
+     * @memberOf fabric.Object.prototype
+     * @param {Function} clipTo Clipping function
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#transformMatrix|transformMatrix}
+     * @method getTransformMatrix
+     * @memberOf fabric.Object.prototype
+     * @return {Array} transformMatrix
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#transformMatrix|transformMatrix}
+     * @method setTransformMatrix
+     * @memberOf fabric.Object.prototype
+     * @param {Array} transformMatrix
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#visible|visible} state
+     * @method getVisible
+     * @memberOf fabric.Object.prototype
+     * @return {Boolean} True if visible
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#visible|visible} state
+     * @method setVisible
+     * @memberOf fabric.Object.prototype
+     * @param {Boolean} value visible value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#shadow|shadow}
+     * @method getShadow
+     * @memberOf fabric.Object.prototype
+     * @return {Object} Shadow instance
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#stroke|stroke}
+     * @method getStroke
+     * @memberOf fabric.Object.prototype
+     * @return {String} stroke value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#stroke|stroke}
+     * @method setStroke
+     * @memberOf fabric.Object.prototype
+     * @param {String} value stroke value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#strokeWidth|strokeWidth}
+     * @method getStrokeWidth
+     * @memberOf fabric.Object.prototype
+     * @return {Number} strokeWidth value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#strokeWidth|strokeWidth}
+     * @method setStrokeWidth
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value strokeWidth value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#originX|originX}
+     * @method getOriginX
+     * @memberOf fabric.Object.prototype
+     * @return {String} originX value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#originX|originX}
+     * @method setOriginX
+     * @memberOf fabric.Object.prototype
+     * @param {String} value originX value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#originY|originY}
+     * @method getOriginY
+     * @memberOf fabric.Object.prototype
+     * @return {String} originY value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#originY|originY}
+     * @method setOriginY
+     * @memberOf fabric.Object.prototype
+     * @param {String} value originY value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#fill|fill}
+     * @method getFill
+     * @memberOf fabric.Object.prototype
+     * @return {String} Fill value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#fill|fill}
+     * @method setFill
+     * @memberOf fabric.Object.prototype
+     * @param {String} value Fill value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#opacity|opacity}
+     * @method getOpacity
+     * @memberOf fabric.Object.prototype
+     * @return {Number} Opacity value (0-1)
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#opacity|opacity}
+     * @method setOpacity
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value Opacity value (0-1)
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#angle|angle} (in degrees)
+     * @method getAngle
+     * @memberOf fabric.Object.prototype
+     * @return {Number}
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#angle|angle}
+     * @method setAngle
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value Angle value (in degrees)
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#top|top position}
+     * @method getTop
+     * @memberOf fabric.Object.prototype
+     * @return {Number} Top value (in pixels)
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#top|top position}
+     * @method setTop
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value Top value (in pixels)
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#left|left position}
+     * @method getLeft
+     * @memberOf fabric.Object.prototype
+     * @return {Number} Left value (in pixels)
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#left|left position}
+     * @method setLeft
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value Left value (in pixels)
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#scaleX|scaleX} value
+     * @method getScaleX
+     * @memberOf fabric.Object.prototype
+     * @return {Number} scaleX value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#scaleX|scaleX} value
+     * @method setScaleX
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value scaleX value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#scaleY|scaleY} value
+     * @method getScaleY
+     * @memberOf fabric.Object.prototype
+     * @return {Number} scaleY value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#scaleY|scaleY} value
+     * @method setScaleY
+     * @memberOf fabric.Object.prototype
+     * @param {Number} value scaleY value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#flipX|flipX} value
+     * @method getFlipX
+     * @memberOf fabric.Object.prototype
+     * @return {Boolean} flipX value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#flipX|flipX} value
+     * @method setFlipX
+     * @memberOf fabric.Object.prototype
+     * @param {Boolean} value flipX value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
+
+    /**
+     * Retrieves object's {@link fabric.Object#flipY|flipY} value
+     * @method getFlipY
+     * @memberOf fabric.Object.prototype
+     * @return {Boolean} flipY value
+     */
+
+    /**
+     * Sets object's {@link fabric.Object#flipY|flipY} value
+     * @method setFlipY
+     * @memberOf fabric.Object.prototype
+     * @param {Boolean} value flipY value
+     * @return {fabric.Object} thisArg
+     * @chainable
+     */
 
     /**
      * Type of an object (rect, circle, path, etc.)
@@ -31,14 +308,14 @@
      * @type String
      * @default
      */
-    originX:                  'center',
+    originX:                  'left',
 
     /**
      * Vertical origin of transformation of an object (one of "top", "bottom", "center")
      * @type String
      * @default
      */
-    originY:                  'center',
+    originY:                  'top',
 
     /**
      * Top position of an object. Note that by default it's relative to object center. You can change this by setting originY={top/center/bottom}
@@ -154,10 +431,23 @@
 
     /**
      * When true, this object will use center point as the origin of transformation
-     * when being resized via the controls
+     * when being scaled via the controls.
+     * <b>Backwards incompatibility note:</b> This property replaces "centerTransform" (Boolean).
+     * @since 1.3.4
      * @type Boolean
+     * @default
      */
-    centerTransform:          false,
+    centeredScaling:          false,
+
+    /**
+     * When true, this object will use center point as the origin of transformation
+     * when being rotated via the controls.
+     * <b>Backwards incompatibility note:</b> This property replaces "centerTransform" (Boolean).
+     * @since 1.3.4
+     * @type Boolean
+     * @default
+     */
+    centeredRotation:         true,
 
     /**
      * Color of object's fill
@@ -174,11 +464,11 @@
     fillRule:                 'source-over',
 
     /**
-     * Overlay fill (takes precedence over fill value)
+     * Background color of an object. Only works with text objects at the moment.
      * @type String
      * @default
      */
-    overlayFill:              null,
+    backgroundColor:          '',
 
     /**
      * When defined, an object is rendered via stroke and this property specifies its color
@@ -257,11 +547,18 @@
 
     /**
      * When set to `false`, an object can not be selected for modification (using either point-click-based or group-based selection).
-     * All events propagate through it.
+     * But events still fire on it.
      * @type Boolean
      * @default
      */
     selectable:               true,
+
+    /**
+     * When set to `false`, an object can not be a target of events. All events propagate through it. Introduced in v1.3.4
+     * @type Boolean
+     * @default
+     */
+    evented:                  true,
 
     /**
      * When set to `false`, an object is not rendered on canvas
@@ -369,7 +666,7 @@
     stateProperties:  (
       'top left width height scaleX scaleY flipX flipY originX originY transformMatrix ' +
       'stroke strokeWidth strokeDashArray strokeLineCap strokeLineJoin strokeMiterLimit ' +
-      'angle opacity fill fillRule overlayFill shadow clipTo visible'
+      'angle opacity fill fillRule shadow clipTo visible backgroundColor'
     ).split(' '),
 
     /**
@@ -463,7 +760,6 @@
         width:              toFixed(this.width, NUM_FRACTION_DIGITS),
         height:             toFixed(this.height, NUM_FRACTION_DIGITS),
         fill:               (this.fill && this.fill.toObject) ? this.fill.toObject() : this.fill,
-        overlayFill:        this.overlayFill,
         stroke:             (this.stroke && this.stroke.toObject) ? this.stroke.toObject() : this.stroke,
         strokeWidth:        toFixed(this.strokeWidth, NUM_FRACTION_DIGITS),
         strokeDashArray:    this.strokeDashArray,
@@ -478,7 +774,8 @@
         opacity:            toFixed(this.opacity, NUM_FRACTION_DIGITS),
         shadow:             (this.shadow && this.shadow.toObject) ? this.shadow.toObject() : this.shadow,
         visible:            this.visible,
-        clipTo:             this.clipTo && String(this.clipTo)
+        clipTo:             this.clipTo && String(this.clipTo),
+        backgroundColor:    this.backgroundColor
       };
 
       if (!this.includeDefaultValues) {
@@ -500,105 +797,20 @@
       return this.toObject(propertiesToInclude);
     },
 
-    /* _TO_SVG_START_ */
-    /**
-     * Returns styles-string for svg-export
-     * @return {String}
-     */
-    getSvgStyles: function() {
-
-      var fill = this.fill
-        ? (this.fill.toLive ? 'url(#SVGID_' + this.fill.id + ')' : this.fill)
-        : 'none';
-
-      var stroke = this.stroke
-        ? (this.stroke.toLive ? 'url(#SVGID_' + this.stroke.id + ')' : this.stroke)
-        : 'none';
-
-      var strokeWidth = this.strokeWidth ? this.strokeWidth : '0';
-      var strokeDashArray = this.strokeDashArray ? this.strokeDashArray.join(' ') : '';
-      var strokeLineCap = this.strokeLineCap ? this.strokeLineCap : 'butt';
-      var strokeLineJoin = this.strokeLineJoin ? this.strokeLineJoin : 'miter';
-      var strokeMiterLimit = this.strokeMiterLimit ? this.strokeMiterLimit : '4';
-      var opacity = typeof this.opacity !== 'undefined' ? this.opacity : '1';
-
-      var visibility = this.visible ? '' : " visibility: hidden;";
-      var filter = this.shadow && this.type !== 'text' ? 'filter: url(#SVGID_' + this.shadow.id + ');' : '';
-
-      return [
-        "stroke: ", stroke, "; ",
-        "stroke-width: ", strokeWidth, "; ",
-        "stroke-dasharray: ", strokeDashArray, "; ",
-        "stroke-linecap: ", strokeLineCap, "; ",
-        "stroke-linejoin: ", strokeLineJoin, "; ",
-        "stroke-miterlimit: ", strokeMiterLimit, "; ",
-        "fill: ", fill, "; ",
-        "opacity: ", opacity, ";",
-        filter,
-        visibility
-      ].join('');
-    },
-
-    /**
-     * Returns transform-string for svg-export
-     * @return {String}
-     */
-    getSvgTransform: function() {
-      var angle = this.getAngle();
-      var center = this.getCenterPoint();
-
-      var NUM_FRACTION_DIGITS = fabric.Object.NUM_FRACTION_DIGITS;
-
-      var translatePart = "translate(" +
-                            toFixed(center.x, NUM_FRACTION_DIGITS) +
-                            " " +
-                            toFixed(center.y, NUM_FRACTION_DIGITS) +
-                          ")";
-
-      var anglePart = angle !== 0
-        ? (" rotate(" + toFixed(angle, NUM_FRACTION_DIGITS) + ")")
-        : '';
-
-      var scalePart = (this.scaleX === 1 && this.scaleY === 1)
-        ? '' :
-        (" scale(" +
-          toFixed(this.scaleX, NUM_FRACTION_DIGITS) +
-          " " +
-          toFixed(this.scaleY, NUM_FRACTION_DIGITS) +
-        ")");
-
-      var flipXPart = this.flipX ? "matrix(-1 0 0 1 0 0) " : "";
-      var flipYPart = this.flipY ? "matrix(1 0 0 -1 0 0)" : "";
-
-      return [ translatePart, anglePart, scalePart, flipXPart, flipYPart ].join('');
-    },
-
-    _createBaseSVGMarkup: function() {
-      var markup = [ ];
-
-      if (this.fill && this.fill.toLive) {
-        markup.push(this.fill.toSVG(this, false));
-      }
-      if (this.stroke && this.stroke.toLive) {
-        markup.push(this.stroke.toSVG(this, false));
-      }
-      if (this.shadow) {
-        markup.push(this.shadow.toSVG(this));
-      }
-      return markup;
-    },
-    /* _TO_SVG_END_ */
-
     /**
      * @private
      * @param {Object} object
      */
     _removeDefaultValues: function(object) {
-      this.stateProperties.forEach(function(prop) {
-        if (object[prop] === this.constructor.prototype[prop]) {
+      var prototype = fabric.util.getKlass(object.type).prototype;
+      var stateProperties = prototype.stateProperties;
+
+      stateProperties.forEach(function(prop) {
+        if (object[prop] === prototype[prop]) {
           delete object[prop];
         }
-      }, this);
+      });
+
       return object;
     },
 
@@ -711,34 +923,11 @@
 
       ctx.save();
 
+      this._transform(ctx, noTransform);
+      this._setStrokeStyles(ctx);
+      this._setFillStyles(ctx);
+
       var m = this.transformMatrix;
-      if (m && !this.group) {
-        ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-      }
-
-      if (!noTransform) {
-        this.transform(ctx);
-      }
-
-      if (this.stroke) {
-        ctx.lineWidth = this.strokeWidth;
-        ctx.lineCap = this.strokeLineCap;
-        ctx.lineJoin = this.strokeLineJoin;
-        ctx.miterLimit = this.strokeMiterLimit;
-        ctx.strokeStyle = this.stroke.toLive
-          ? this.stroke.toLive(ctx)
-          : this.stroke;
-      }
-
-      if (this.overlayFill) {
-        ctx.fillStyle = this.overlayFill;
-      }
-      else if (this.fill) {
-        ctx.fillStyle = this.fill.toLive
-          ? this.fill.toLive(ctx)
-          : this.fill;
-      }
-
       if (m && this.group) {
         ctx.translate(-this.group.width/2, -this.group.height/2);
         ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -755,6 +944,36 @@
         this.drawControls(ctx);
       }
       ctx.restore();
+    },
+
+    _transform: function(ctx, noTransform) {
+      var m = this.transformMatrix;
+      if (m && !this.group) {
+        ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+      }
+      if (!noTransform) {
+        this.transform(ctx);
+      }
+    },
+
+    _setStrokeStyles: function(ctx) {
+      if (this.stroke) {
+        ctx.lineWidth = this.strokeWidth;
+        ctx.lineCap = this.strokeLineCap;
+        ctx.lineJoin = this.strokeLineJoin;
+        ctx.miterLimit = this.strokeMiterLimit;
+        ctx.strokeStyle = this.stroke.toLive
+          ? this.stroke.toLive(ctx)
+          : this.stroke;
+      }
+    },
+
+    _setFillStyles: function(ctx) {
+      if (this.fill) {
+        ctx.fillStyle = this.fill.toLive
+          ? this.fill.toLive(ctx)
+          : this.fill;
+      }
     },
 
     /**
@@ -865,10 +1084,10 @@
      * @param {String} [options.format=png] The format of the output image. Either "jpeg" or "png"
      * @param {Number} [options.quality=1] Quality level (0..1). Only used for jpeg.
      * @param {Number} [options.multiplier=1] Multiplier to scale by
-     * @param {Number} [options.left] Cropping left offset
-     * @param {Number} [options.top] Cropping top offset
-     * @param {Number} [options.width] Cropping width
-     * @param {Number} [options.height] Cropping height
+     * @param {Number} [options.left] Cropping left offset. Introduced in v1.2.14
+     * @param {Number} [options.top] Cropping top offset. Introduced in v1.2.14
+     * @param {Number} [options.width] Cropping width. Introduced in v1.2.14
+     * @param {Number} [options.height] Cropping height. Introduced in v1.2.14
      * @return {String} Returns a data: URL containing a representation of the object in the format specified by options.format
      */
     toDataURL: function(options) {
@@ -901,10 +1120,12 @@
       this.set('active', false);
       this.setPositionByOrigin(new fabric.Point(el.width / 2, el.height / 2), 'center', 'center');
 
+      var originalCanvas = this.canvas;
       canvas.add(this);
       var data = canvas.toDataURL(options);
 
       this.set(origParams).setCoords();
+      this.canvas = originalCanvas;
 
       canvas.dispose();
       canvas = null;
@@ -919,18 +1140,6 @@
      */
     isType: function(type) {
       return this.type === type;
-    },
-
-    /**
-     * Makes object's color grayscale
-     * @return {fabric.Object} thisArg
-     */
-    toGrayscale: function() {
-      var fillValue = this.get('fill');
-      if (fillValue) {
-        this.set('overlayFill', new fabric.Color(fillValue).toGrayscale().toRgb());
-      }
-      return this;
     },
 
     /**
@@ -966,6 +1175,37 @@
      * @param {Object} [options.colorStops] Color stops object eg. {0: 'ff0000', 1: '000000'}
      * @return {fabric.Object} thisArg
      * @chainable
+     * @see {@link http://jsfiddle.net/fabricjs/58y8b/|jsFiddle demo}
+     * @example <caption>Set linear gradient</caption>
+     * object.setGradient('fill', {
+     *   type: 'linear',
+     *   x1: -object.width / 2,
+     *   y1: 0,
+     *   x2: object.width / 2,
+     *   y2: 0,
+     *   colorStops: {
+     *     0: 'red',
+     *     0.5: '#005555',
+     *     1: 'rgba(0,0,255,0.5)'
+     *   }
+     * });
+     * canvas.renderAll();
+     * @example <caption>Set radial gradient</caption>
+     * object.setGradient('fill', {
+     *   type: 'radial',
+     *   x1: 0,
+     *   y1: 0,
+     *   x2: 0,
+     *   y2: 0,
+     *   r1: object.width / 2,
+     *   r2: 10,
+     *   colorStops: {
+     *     0: 'red',
+     *     0.5: '#005555',
+     *     1: 'rgba(0,0,255,0.5)'
+     *   }
+     * });
+     * canvas.renderAll();
      */
     setGradient: function(property, options) {
       options || (options = { });
@@ -1002,13 +1242,22 @@
      * @param {Number} [options.offsetY=0] Pattern vertical offset from object's left/top corner
      * @return {fabric.Object} thisArg
      * @chainable
+     * @see {@link http://jsfiddle.net/fabricjs/QT3pa/|jsFiddle demo}
+     * @example <caption>Set pattern</caption>
+     * fabric.util.loadImage('http://fabricjs.com/assets/escheresque_ste.png', function(img) {
+     *   object.setPatternFill({
+     *     source: img,
+     *     repeat: 'repeat'
+     *   });
+     *   canvas.renderAll();
+     * });
      */
     setPatternFill: function(options) {
       return this.set('fill', new fabric.Pattern(options));
     },
 
     /**
-     * Sets shadow of an object
+     * Sets {@link fabric.Object#shadow|shadow} of an object
      * @param {Object|String} [options] Options object or string (e.g. "2px 2px 10px rgba(0,0,0,0.2)")
      * @param {String} [options.color=rgb(0,0,0)] Shadow color
      * @param {Number} [options.blur=0] Shadow blur
@@ -1016,6 +1265,18 @@
      * @param {Number} [options.offsetY=0] Shadow vertical offset
      * @return {fabric.Object} thisArg
      * @chainable
+     * @see {@link http://jsfiddle.net/fabricjs/7gvJG/|jsFiddle demo}
+     * @example <caption>Set shadow with string notation</caption>
+     * object.setShadow('2px 2px 10px rgba(0,0,0,0.2)');
+     * canvas.renderAll();
+     * @example <caption>Set shadow with object notation</caption>
+     * object.setShadow({
+     *   color: 'red',
+     *   blur: 10,
+     *   offsetX: 20,
+     *   offsetY: 20
+     * });
+     * canvas.renderAll();
      */
     setShadow: function(options) {
       return this.set('shadow', new fabric.Shadow(options));
@@ -1061,7 +1322,8 @@
      * @chainable
      */
     center: function () {
-      return this.centerH().centerV();
+      this.canvas.centerObject(this);
+      return this;
     },
 
     /**
@@ -1074,81 +1336,18 @@
     },
 
     /**
-     * Moves an object to the bottom of the stack of drawn objects
-     * @return {fabric.Object} thisArg
-     * @chainable
+     * Returns coordinates of a pointer relative to an object
+     * @param {Event} e Event to operate upon
+     * @param {Object} [pointer] Pointer to operate upon (instead of event)
+     * @return {Object} Coordinates of a pointer (x, y)
      */
-    sendToBack: function() {
-      if (this.group) {
-        fabric.StaticCanvas.prototype.sendToBack.call(this.group, this);
-      }
-      else {
-        this.canvas.sendToBack(this);
-      }
-      return this;
-    },
-
-    /**
-     * Moves an object to the top of the stack of drawn objects
-     * @return {fabric.Object} thisArg
-     * @chainable
-     */
-    bringToFront: function() {
-      if (this.group) {
-        fabric.StaticCanvas.prototype.bringToFront.call(this.group, this);
-      }
-      else {
-        this.canvas.bringToFront(this);
-      }
-      return this;
-    },
-
-    /**
-     * Moves an object down in stack of drawn objects
-     * @param {Boolean} [intersecting] If `true`, send object behind next lower intersecting object
-     * @return {fabric.Object} thisArg
-     * @chainable
-     */
-    sendBackwards: function(intersecting) {
-      if (this.group) {
-        fabric.StaticCanvas.prototype.sendBackwards.call(this.group, this, intersecting);
-      }
-      else {
-        this.canvas.sendBackwards(this, intersecting);
-      }
-      return this;
-    },
-
-    /**
-     * Moves an object up in stack of drawn objects
-     * @param {Boolean} [intersecting] If `true`, send object in front of next upper intersecting object
-     * @return {fabric.Object} thisArg
-     * @chainable
-     */
-    bringForward: function(intersecting) {
-      if (this.group) {
-        fabric.StaticCanvas.prototype.bringForward.call(this.group, this, intersecting);
-      }
-      else {
-        this.canvas.bringForward(this, intersecting);
-      }
-      return this;
-    },
-
-    /**
-     * Moves an object to specified level in stack of drawn objects
-     * @param {Number} index New position of object
-     * @return {fabric.Object} thisArg
-     * @chainable
-     */
-    moveTo: function(index) {
-      if (this.group) {
-        fabric.StaticCanvas.prototype.moveTo.call(this.group, this, index);
-      }
-      else {
-        this.canvas.moveTo(this, index);
-      }
-      return this;
+    getLocalPointer: function(e, pointer) {
+      pointer = pointer || this.canvas.getPointer(e);
+      var objectLeftTop = this.translateToOriginPoint(this.getCenterPoint(), 'left', 'top');
+      return {
+        x: pointer.x - objectLeftTop.x,
+        y: pointer.y - objectLeftTop.y
+      };
     }
   });
 
@@ -1164,7 +1363,8 @@
   extend(fabric.Object.prototype, fabric.Observable);
 
   /**
-   * Defines the number of fraction digits when serializing object values. You can use it to increase/decrease precision of such values like left, top, scaleX, scaleY, etc.
+   * Defines the number of fraction digits to use when serializing object values.
+   * You can use it to increase/decrease precision of such values like left, top, scaleX, scaleY, etc.
    * @static
    * @memberof fabric.Object
    * @constant
@@ -1173,6 +1373,7 @@
   fabric.Object.NUM_FRACTION_DIGITS = 2;
 
   /**
+   * Unique id used internally when creating SVG elements
    * @static
    * @memberof fabric.Object
    * @type Number

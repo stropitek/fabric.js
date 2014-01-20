@@ -29,6 +29,8 @@
    * @class fabric.Group
    * @extends fabric.Object
    * @mixes fabric.Collection
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-3/#groups}
+   * @see {@link fabric.Group#initialize} for constructor definition
    */
   fabric.Group = fabric.util.createClass(fabric.Object, fabric.Collection, /** @lends fabric.Group.prototype */ {
 
@@ -72,26 +74,28 @@
      * @private
      */
     _updateObjectsCoords: function() {
-      var groupDeltaX = this.left,
-          groupDeltaY = this.top;
+      this.forEachObject(this._updateObjectCoords, this);
+    },
 
-      this.forEachObject(function(object) {
+    /**
+     * @private
+     */
+    _updateObjectCoords: function(object) {
+      var objectLeft = object.getLeft(),
+          objectTop = object.getTop();
 
-        var objectLeft = object.get('left'),
-            objectTop = object.get('top');
+      object.set({
+        originalLeft: objectLeft,
+        originalTop: objectTop,
+        left: objectLeft - this.left,
+        top: objectTop - this.top
+      });
 
-        object.set('originalLeft', objectLeft);
-        object.set('originalTop', objectTop);
+      object.setCoords();
 
-        object.set('left', objectLeft - groupDeltaX);
-        object.set('top', objectTop - groupDeltaY);
-
-        object.setCoords();
-
-        // do not display corners of objects enclosed in a group
-        object.__origHasControls = object.hasControls;
-        object.hasControls = false;
-      }, this);
+      // do not display corners of objects enclosed in a group
+      object.__origHasControls = object.hasControls;
+      object.hasControls = false;
     },
 
     /**
@@ -100,14 +104,6 @@
      */
     toString: function() {
       return '#<fabric.Group: (' + this.complexity() + ')>';
-    },
-
-    /**
-     * Returns an array of all objects in this group
-     * @return {Array} group objects
-     */
-    getObjects: function() {
-      return this._objects;
     },
 
     /**
@@ -121,10 +117,18 @@
       this._objects.push(object);
       object.group = this;
       // since _restoreObjectsState set objects inactive
-      this.forEachObject(function(o){ o.set('active', true); o.group = this; }, this);
+      this.forEachObject(this._setObjectActive, this);
       this._calcBounds();
       this._updateObjectsCoords();
       return this;
+    },
+
+    /**
+     * @private
+     */
+    _setObjectActive: function(object) {
+      object.set('active', true);
+      object.group = this;
     },
 
     /**
@@ -134,13 +138,16 @@
      * @chainable
      */
     removeWithUpdate: function(object) {
+      this._moveFlippedObject(object);
       this._restoreObjectsState();
+
       // since _restoreObjectsState set objects inactive
-      this.forEachObject(function(o){ o.set('active', true); o.group = this; }, this);
+      this.forEachObject(this._setObjectActive, this);
 
       this.remove(object);
       this._calcBounds();
       this._updateObjectsCoords();
+
       return this;
     },
 
@@ -194,7 +201,7 @@
 
     /**
      * Returns object representation of an instance
-     * @param {Array} propertiesToInclude
+     * @param {Array} [propertiesToInclude] Any properties that you might want to additionally include in the output
      * @return {Object} object representation of an instance
      */
     toObject: function(propertiesToInclude) {
@@ -215,28 +222,13 @@
       ctx.save();
       this.transform(ctx);
 
-      var groupScaleFactor = Math.max(this.scaleX, this.scaleY);
-
       this.clipTo && fabric.util.clipContext(this, ctx);
 
-      //The array is now sorted in order of highest first, so start from end.
+      // the array is now sorted in order of highest first, so start from end
       for (var i = 0, len = this._objects.length; i < len; i++) {
-
-        var object = this._objects[i],
-            originalScaleFactor = object.borderScaleFactor,
-            originalHasRotatingPoint = object.hasRotatingPoint;
-
-        // do not render if object is not visible
-        if (!object.visible) continue;
-
-        object.borderScaleFactor = groupScaleFactor;
-        object.hasRotatingPoint = false;
-
-        object.render(ctx);
-
-        object.borderScaleFactor = originalScaleFactor;
-        object.hasRotatingPoint = originalHasRotatingPoint;
+        this._renderObject(this._objects[i], ctx);
       }
+
       this.clipTo && ctx.restore();
 
       if (!noTransform && this.active) {
@@ -244,7 +236,27 @@
         this.drawControls(ctx);
       }
       ctx.restore();
-      this.setCoords();
+    },
+
+    /**
+     * @private
+     */
+    _renderObject: function(object, ctx) {
+
+      var originalScaleFactor = object.borderScaleFactor,
+          originalHasRotatingPoint = object.hasRotatingPoint,
+          groupScaleFactor = Math.max(this.scaleX, this.scaleY);
+
+      // do not render if object is not visible
+      if (!object.visible) return;
+
+      object.borderScaleFactor = groupScaleFactor;
+      object.hasRotatingPoint = false;
+
+      object.render(ctx);
+
+      object.borderScaleFactor = originalScaleFactor;
+      object.hasRotatingPoint = originalHasRotatingPoint;
     },
 
     /**
@@ -259,26 +271,61 @@
     },
 
     /**
+     * Moves a flipped object to the position where it's displayed
+     * @private
+     * @param {fabric.Object} object
+     * @return {fabric.Group} thisArg
+     */
+    _moveFlippedObject: function(object) {
+      var oldOriginX = object.get('originX'),
+          oldOriginY = object.get('originY'),
+          center = object.getCenterPoint();
+
+      object.set({
+        originX: 'center',
+        originY: 'center',
+        left: center.x,
+        top: center.y
+      });
+
+      this._toggleFlipping(object);
+
+      var newOrigin = object.getPointByOrigin(oldOriginX, oldOriginY);
+
+      object.set({
+        originX: oldOriginX,
+        originY: oldOriginY,
+        left: newOrigin.x,
+        top: newOrigin.y
+      });
+
+      return this;
+    },
+
+    /**
+     * @private
+     */
+    _toggleFlipping: function(object) {
+      if (this.flipX) {
+        object.toggle('flipX');
+        object.set('left', -object.get('left'));
+        object.setAngle(-object.getAngle());
+      }
+      if (this.flipY) {
+        object.toggle('flipY');
+        object.set('top', -object.get('top'));
+        object.setAngle(-object.getAngle());
+      }
+    },
+
+    /**
      * Restores original state of a specified object in group
      * @private
      * @param {fabric.Object} object
      * @return {fabric.Group} thisArg
      */
     _restoreObjectState: function(object) {
-
-      var groupLeft = this.get('left'),
-          groupTop = this.get('top'),
-          groupAngle = this.getAngle() * (Math.PI / 180),
-          rotatedTop = Math.cos(groupAngle) * object.get('top') * this.get('scaleY') + Math.sin(groupAngle) * object.get('left') * this.get('scaleX'),
-          rotatedLeft = -Math.sin(groupAngle) * object.get('top') * this.get('scaleY') + Math.cos(groupAngle) * object.get('left') * this.get('scaleX');
-
-      object.setAngle(object.getAngle() + this.getAngle());
-
-      object.set('left', groupLeft + rotatedLeft);
-      object.set('top', groupTop + rotatedTop);
-
-      object.set('scaleX', object.get('scaleX') * this.get('scaleX'));
-      object.set('scaleY', object.get('scaleY') * this.get('scaleY'));
+      this._setObjectPosition(object);
 
       object.setCoords();
       object.hasControls = object.__origHasControls;
@@ -291,11 +338,43 @@
     },
 
     /**
+     * @private
+     */
+    _setObjectPosition: function(object) {
+      var groupLeft = this.getLeft(),
+          groupTop = this.getTop(),
+          rotated = this._getRotatedLeftTop(object);
+
+      object.set({
+        angle: object.getAngle() + this.getAngle(),
+        left: groupLeft + rotated.left,
+        top: groupTop + rotated.top,
+        scaleX: object.get('scaleX') * this.get('scaleX'),
+        scaleY: object.get('scaleY') * this.get('scaleY')
+      });
+    },
+
+    /**
+     * @private
+     */
+    _getRotatedLeftTop: function(object) {
+      var groupAngle = this.getAngle() * (Math.PI / 180);
+      return {
+        left: (-Math.sin(groupAngle) * object.getTop() * this.get('scaleY') +
+                Math.cos(groupAngle) * object.getLeft() * this.get('scaleX')),
+
+        top:  (Math.cos(groupAngle) * object.getTop() * this.get('scaleY') +
+               Math.sin(groupAngle) * object.getLeft() * this.get('scaleX'))
+      };
+    },
+
+    /**
      * Destroys a group (restoring state of its objects)
      * @return {fabric.Group} thisArg
      * @chainable
      */
     destroy: function() {
+      this._objects.forEach(this._moveFlippedObject, this);
       return this._restoreObjectsState();
     },
 
@@ -354,11 +433,9 @@
     _calcBounds: function() {
       var aX = [],
           aY = [],
-          minX, minY, maxX, maxY, o, width, height,
-          i = 0,
-          len = this._objects.length;
+          o;
 
-      for (; i < len; ++i) {
+      for (var i = 0, len = this._objects.length; i < len; ++i) {
         o = this._objects[i];
         o.setCoords();
         for (var prop in o.oCoords) {
@@ -367,36 +444,48 @@
         }
       }
 
-      minX = min(aX);
-      maxX = max(aX);
-      minY = min(aY);
-      maxY = max(aY);
+      this.set(this._getBounds(aX, aY));
+    },
 
-      width = (maxX - minX) || 0;
-      height = (maxY - minY) || 0;
+    /**
+     * @private
+     */
+    _getBounds: function(aX, aY) {
+      var minX = min(aX),
+          maxX = max(aX),
+          minY = min(aY),
+          maxY = max(aY),
+          width = (maxX - minX) || 0,
+          height = (maxY - minY) || 0;
 
-      this.width = width;
-      this.height = height;
-
-      this.left = (minX + width / 2) || 0;
-      this.top = (minY + height / 2) || 0;
+      return {
+        width: width,
+        height: height,
+        left: (minX + width / 2) || 0,
+        top: (minY + height / 2) || 0
+      };
     },
 
     /* _TO_SVG_START_ */
     /**
      * Returns svg representation of an instance
+     * @param {Function} [reviver] Method for further parsing of svg representation.
      * @return {String} svg representation of an instance
      */
-    toSVG: function() {
-      var objectsMarkup = [ ];
+    toSVG: function(reviver) {
+      var markup = [
+        '<g ',
+          'transform="', this.getSvgTransform(),
+        '">'
+      ];
+
       for (var i = 0, len = this._objects.length; i < len; i++) {
-        objectsMarkup.push(this._objects[i].toSVG());
+        markup.push(this._objects[i].toSVG(reviver));
       }
 
-      return (
-        '<g transform="' + this.getSvgTransform() + '">' +
-          objectsMarkup.join('') +
-        '</g>');
+      markup.push('</g>');
+
+      return reviver ? reviver(markup.join('')) : markup.join('');
     },
     /* _TO_SVG_END_ */
 

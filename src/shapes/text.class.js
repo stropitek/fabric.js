@@ -23,7 +23,6 @@
     'textAlign',
     'fontStyle',
     'lineHeight',
-    'backgroundColor',
     'textBackgroundColor',
     'useNative',
     'path'
@@ -34,6 +33,8 @@
    * @class fabric.Text
    * @extends fabric.Object
    * @return {fabric.Text} thisArg
+   * @tutorial {@link http://fabricjs.com/fabric-intro-part-2/#text}
+   * @see {@link fabric.Text#initialize} for constructor definition
    */
   fabric.Text = fabric.util.createClass(fabric.Object, /** @lends fabric.Text.prototype */ {
 
@@ -53,6 +54,11 @@
       strokeWidth: true,
       text: true
     },
+
+    /**
+     * @private
+     */
+    _reNewline: /\r?\n/,
 
     /**
      * Retrieves object's fontSize
@@ -255,13 +261,6 @@
     lineHeight:           1.3,
 
     /**
-     * Background color of an entire text box
-     * @type String
-     * @default
-     */
-    backgroundColor:      '',
-
-    /**
      * Background color of text lines
      * @type String
      * @default
@@ -283,7 +282,8 @@
     useNative:            true,
 
     /**
-     * List of properties to consider when checking if state of an object is changed ({@link fabric.Object#hasStateChanged})
+     * List of properties to consider when checking if
+     * state of an object is changed ({@link fabric.Object#hasStateChanged})
      * as well as for history (undo/redo) purposes
      * @type Array
      */
@@ -347,7 +347,7 @@
      */
     _render: function(ctx) {
 
-      var isInPathGroup = this.group && this.group.type !== 'group';
+      var isInPathGroup = this.group && this.group.type === 'path-group';
       if (isInPathGroup && !this.transformMatrix) {
         ctx.translate(-this.group.width/2 + this.left, -this.group.height / 2 + this.top);
       }
@@ -368,12 +368,11 @@
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _renderViaNative: function(ctx) {
+      var textLines = this.text.split(this._reNewline);
 
       this.transform(ctx, fabric.isLikelyNode);
 
       this._setTextStyles(ctx);
-
-      var textLines = this.text.split(/\r?\n/);
 
       this.width = this._getTextWidth(ctx, textLines);
       this.height = this._getTextHeight(ctx, textLines);
@@ -381,18 +380,8 @@
       this.clipTo && fabric.util.clipContext(this, ctx);
 
       this._renderTextBackground(ctx, textLines);
-
-      if (this.textAlign !== 'left' && this.textAlign !== 'justify') {
-        ctx.save();
-        ctx.translate(this.textAlign === 'center' ? (this.width / 2) : this.width, 0);
-      }
-
-      ctx.save();
-      this._setShadow(ctx);
-      this._renderTextFill(ctx, textLines);
-      this._renderTextStroke(ctx, textLines);
-      this._removeShadow(ctx);
-      ctx.restore();
+      this._translateForTextAlign(ctx);
+      this._renderText(ctx, textLines);
 
       if (this.textAlign !== 'left' && this.textAlign !== 'justify') {
         ctx.restore();
@@ -403,6 +392,30 @@
 
       this._setBoundaries(ctx, textLines);
       this._totalLineHeight = 0;
+    },
+
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     */
+    _renderText: function(ctx, textLines) {
+      ctx.save();
+      this._setShadow(ctx);
+      this._renderTextFill(ctx, textLines);
+      this._renderTextStroke(ctx, textLines);
+      this._removeShadow(ctx);
+      ctx.restore();
+    },
+
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     */
+    _translateForTextAlign: function(ctx) {
+      if (this.textAlign !== 'left' && this.textAlign !== 'justify') {
+        ctx.save();
+        ctx.translate(this.textAlign === 'center' ? (this.width / 2) : this.width, 0);
+      }
     },
 
     /**
@@ -431,22 +444,12 @@
      * @param {CanvasRenderingContext2D} ctx Context to render on
      */
     _setTextStyles: function(ctx) {
-      if (this.fill) {
-        ctx.fillStyle = this.fill.toLive
-            ? this.fill.toLive(ctx)
-            : this.fill;
-      }
-      if (this.stroke) {
-        ctx.lineWidth = this.strokeWidth;
-        ctx.lineCap = this.strokeLineCap;
-        ctx.lineJoin = this.strokeLineJoin;
-        ctx.miterLimit = this.strokeMiterLimit;
-        ctx.strokeStyle = this.stroke.toLive
-          ? this.stroke.toLive(ctx)
-          : this.stroke;
-      }
+      this._setFillStyles(ctx);
+      this._setStrokeStyles(ctx);
       ctx.textBaseline = 'alphabetic';
-      ctx.textAlign = this.textAlign;
+      if (!this.skipTextAlign) {
+        ctx.textAlign = this.textAlign;
+      }
       ctx.font = this._getFontDeclaration();
     },
 
@@ -467,7 +470,7 @@
      * @return {Number} Maximum width of fabric.Text object
      */
     _getTextWidth: function(ctx, textLines) {
-      var maxWidth = ctx.measureText(textLines[0]).width;
+      var maxWidth = ctx.measureText(textLines[0] || '|').width;
 
       for (var i = 1, len = textLines.length; i < len; i++) {
         var currentLineWidth = ctx.measureText(textLines[i]).width;
@@ -486,7 +489,7 @@
      * @param {Number} left Left position of text
      * @param {Number} top Top position of text
      */
-    _drawChars: function(method, ctx, chars, left, top) {
+    _renderChars: function(method, ctx, chars, left, top) {
       ctx[method](chars, left, top);
     },
 
@@ -499,13 +502,13 @@
      * @param {Number} top Top position of text
      * @param {Number} lineIndex Index of a line in a text
      */
-    _drawTextLine: function(method, ctx, line, left, top, lineIndex) {
+    _renderTextLine: function(method, ctx, line, left, top, lineIndex) {
       // lift the line by quarter of fontSize
       top -= this.fontSize / 4;
 
       // short-circuit
       if (this.textAlign !== 'justify') {
-        this._drawChars(method, ctx, line, left, top, lineIndex);
+        this._renderChars(method, ctx, line, left, top, lineIndex);
         return;
       }
 
@@ -522,12 +525,12 @@
 
         var leftOffset = 0;
         for (var i = 0, len = words.length; i < len; i++) {
-          this._drawChars(method, ctx, words[i], left + leftOffset, top, lineIndex);
+          this._renderChars(method, ctx, words[i], left + leftOffset, top, lineIndex);
           leftOffset += ctx.measureText(words[i]).width + spaceWidth;
         }
       }
       else {
-        this._drawChars(method, ctx, line, left, top, lineIndex);
+        this._renderChars(method, ctx, line, left, top, lineIndex);
       }
     },
 
@@ -536,7 +539,7 @@
      * @return {Number} Left offset
      */
     _getLeftOffset: function() {
-      if (fabric.isLikelyNode && (this.originX === 'left' || this.originX === 'center')) {
+      if (fabric.isLikelyNode) {
         return 0;
       }
       return -this.width / 2;
@@ -547,16 +550,6 @@
      * @return {Number} Top offset
      */
     _getTopOffset: function() {
-      if (fabric.isLikelyNode) {
-        if (this.originY === 'center') {
-          return -this.height / 2;
-        }
-        else if (this.originY === 'bottom') {
-          return -this.height;
-        }
-        return 0;
-      }
-      // in browser, text drawing always starts at vertical center
       return -this.height / 2;
     },
 
@@ -566,7 +559,7 @@
      * @param {Array} textLines Array of all text lines
      */
     _renderTextFill: function(ctx, textLines) {
-      if (!this.fill && !this.skipFillStrokeCheck) return;
+      if (!this.fill && !this._skipFillStrokeCheck) return;
 
       this._boundaries = [ ];
       var lineHeights = 0;
@@ -575,7 +568,7 @@
         var heightOfLine = this._getHeightOfLine(ctx, i, textLines);
         lineHeights += heightOfLine;
 
-        this._drawTextLine(
+        this._renderTextLine(
           'fillText',
           ctx,
           textLines[i],
@@ -592,7 +585,7 @@
      * @param {Array} textLines Array of all text lines
      */
     _renderTextStroke: function(ctx, textLines) {
-      if (!this.stroke && !this.skipFillStrokeCheck) return;
+      if (!this.stroke && !this._skipFillStrokeCheck) return;
 
       var lineHeights = 0;
 
@@ -610,7 +603,7 @@
         var heightOfLine = this._getHeightOfLine(ctx, i, textLines);
         lineHeights += heightOfLine;
 
-        this._drawTextLine(
+        this._renderTextLine(
           'strokeText',
           ctx,
           textLines[i],
@@ -734,22 +727,20 @@
 
           ctx.fillRect(
             _this._getLeftOffset() + lineLeftOffset,
-            (offset + (i * _this._getHeightOfLine(ctx, i, textLines))) - halfOfVerticalBox,
+            ~~((offset + (i * _this._getHeightOfLine(ctx, i, textLines))) - halfOfVerticalBox),
             lineWidth,
             1);
         }
       }
 
-      var fractionOfFontSize = this.fontSize / 4;
-
       if (this.textDecoration.indexOf('underline') > -1) {
         renderLinesAtOffset(this.fontSize * this.lineHeight);
       }
       if (this.textDecoration.indexOf('line-through') > -1) {
-        renderLinesAtOffset(this.fontSize * this.lineHeight - fractionOfFontSize);
+        renderLinesAtOffset(this.fontSize * this.lineHeight - this.fontSize / 2);
       }
       if (this.textDecoration.indexOf('overline') > -1) {
-        renderLinesAtOffset(fractionOfFontSize);
+        renderLinesAtOffset(this.fontSize * this.lineHeight - this.fontSize);
       }
     },
 
@@ -790,7 +781,7 @@
      * @return {Object} Object representation of an instance
      */
     toObject: function(propertiesToInclude) {
-      return extend(this.callSuper('toObject', propertiesToInclude), {
+      var object = extend(this.callSuper('toObject', propertiesToInclude), {
         text:                 this.text,
         fontSize:             this.fontSize,
         fontWeight:           this.fontWeight,
@@ -800,35 +791,61 @@
         textDecoration:       this.textDecoration,
         textAlign:            this.textAlign,
         path:                 this.path,
-        backgroundColor:      this.backgroundColor,
         textBackgroundColor:  this.textBackgroundColor,
         useNative:            this.useNative
       });
+      if (!this.includeDefaultValues) {
+        this._removeDefaultValues(object);
+      }
+      return object;
     },
 
     /* _TO_SVG_START_ */
     /**
      * Returns SVG representation of an instance
+     * @param {Function} [reviver] Method for further parsing of svg representation.
      * @return {String} svg representation of an instance
      */
-    toSVG: function() {
-      var textLines = this.text.split(/\r?\n/),
-          lineTopOffset = this.useNative
+    toSVG: function(reviver) {
+      var markup = [ ],
+          textLines = this.text.split(this._reNewline),
+          offsets = this._getSVGLeftTopOffsets(textLines),
+          textAndBg = this._getSVGTextAndBg(offsets.lineTop, offsets.textLeft, textLines),
+          shadowSpans = this._getSVGShadows(offsets.lineTop, textLines);
+
+      // move top offset by an ascent
+      offsets.textTop += (this._fontAscent ? ((this._fontAscent / 5) * this.lineHeight) : 0);
+
+      this._wrapSVGTextAndBg(markup, textAndBg, shadowSpans, offsets);
+
+      return reviver ? reviver(markup.join('')) : markup.join('');
+    },
+
+    /**
+     * @private
+     */
+    _getSVGLeftTopOffsets: function(textLines) {
+      var lineTop = this.useNative
             ? this.fontSize * this.lineHeight
             : (-this._fontAscent - ((this._fontAscent / 5) * this.lineHeight)),
 
-          textLeftOffset = -(this.width/2),
-          textTopOffset = this.useNative
+          textLeft = -(this.width/2),
+          textTop = this.useNative
             ? this.fontSize - 1
-            : (this.height/2) - (textLines.length * this.fontSize) - this._totalLineHeight,
+            : (this.height/2) - (textLines.length * this.fontSize) - this._totalLineHeight;
 
-          textAndBg = this._getSVGTextAndBg(lineTopOffset, textLeftOffset, textLines),
-          shadowSpans = this._getSVGShadows(lineTopOffset, textLines);
+      return {
+        textLeft: textLeft,
+        textTop: textTop,
+        lineTop: lineTop
+      };
+    },
 
-      // move top offset by an ascent
-      textTopOffset += (this._fontAscent ? ((this._fontAscent / 5) * this.lineHeight) : 0);
-
-      return [
+    /**
+     * @private
+     */
+    _wrapSVGTextAndBg: function(markup, textAndBg, shadowSpans, offsets) {
+      markup.push(
         '<g transform="', this.getSvgTransform(), '">',
           textAndBg.textBgRects.join(''),
           '<text ',
@@ -839,21 +856,21 @@
             (this.textDecoration ? 'text-decoration="' + this.textDecoration + '" ': ''),
             'style="', this.getSvgStyles(), '" ',
             /* svg starts from left/bottom corner so we normalize height */
-            'transform="translate(', toFixed(textLeftOffset, 2), ' ', toFixed(textTopOffset, 2), ')">',
+            'transform="translate(', toFixed(offsets.textLeft, 2), ' ', toFixed(offsets.textTop, 2), ')">',
             shadowSpans.join(''),
             textAndBg.textSpans.join(''),
           '</text>',
         '</g>'
-      ].join('');
+      );
     },
 
     /**
      * @private
-     * @param {Number} lineTopOffset Line top offset
+     * @param {Number} lineHeight
      * @param {Array} textLines Array of all text lines
      * @return {Array}
      */
-    _getSVGShadows: function(lineTopOffset, textLines) {
+    _getSVGShadows: function(lineHeight, textLines) {
       var shadowSpans = [],
           i, len,
           lineTopOffsetMultiplier = 1;
@@ -870,14 +887,15 @@
             toFixed((lineLeftOffset + lineTopOffsetMultiplier) + this.shadow.offsetX, 2),
             ((i === 0 || this.useNative) ? '" y' : '" dy'), '="',
             toFixed(this.useNative
-              ? ((lineTopOffset * i) - this.height / 2 + this.shadow.offsetY)
-              : (lineTopOffset + (i === 0 ? this.shadow.offsetY : 0)), 2),
+              ? ((lineHeight * i) - this.height / 2 + this.shadow.offsetY)
+              : (lineHeight + (i === 0 ? this.shadow.offsetY : 0)), 2),
             '" ',
             this._getFillAttributes(this.shadow.color), '>',
             fabric.util.string.escapeXml(textLines[i]),
           '</tspan>');
           lineTopOffsetMultiplier = 1;
-        } else {
+        }
+        else {
           // in some environments (e.g. IE 7 & 8) empty tspans are completely ignored, using a lineTopOffsetMultiplier
           // prevents empty tspans
           lineTopOffsetMultiplier++;
@@ -889,15 +907,79 @@
 
     /**
      * @private
-     * @param {Number} lineTopOffset Line top offset
+     * @param {Number} lineHeight
      * @param {Number} textLeftOffset Text left offset
      * @param {Array} textLines Array of all text lines
      * @return {Object}
      */
-    _getSVGTextAndBg: function(lineTopOffset, textLeftOffset, textLines) {
-      var textSpans = [ ], textBgRects = [ ], i, lineLeftOffset, len, lineTopOffsetMultiplier = 1;
+    _getSVGTextAndBg: function(lineHeight, textLeftOffset, textLines) {
+      var textSpans = [ ],
+          textBgRects = [ ],
+          lineTopOffsetMultiplier = 1;
 
       // bounding-box background
+      this._setSVGBg(textBgRects);
+
+      // text and text-background
+      for (var i = 0, len = textLines.length; i < len; i++) {
+        if (textLines[i] !== '') {
+          this._setSVGTextLineText(textLines[i], i, textSpans, lineHeight, lineTopOffsetMultiplier, textBgRects);
+          lineTopOffsetMultiplier = 1;
+        }
+        else {
+          // in some environments (e.g. IE 7 & 8) empty tspans are completely ignored, using a lineTopOffsetMultiplier
+          // prevents empty tspans
+          lineTopOffsetMultiplier++;
+        }
+
+        if (!this.textBackgroundColor || !this._boundaries) continue;
+
+        this._setSVGTextLineBg(textBgRects, i, textLeftOffset, lineHeight);
+      }
+
+      return {
+        textSpans: textSpans,
+        textBgRects: textBgRects
+      };
+    },
+
+    _setSVGTextLineText: function(textLine, i, textSpans, lineHeight, lineTopOffsetMultiplier) {
+      var lineLeftOffset = (this._boundaries && this._boundaries[i])
+        ? toFixed(this._boundaries[i].left, 2)
+        : 0;
+
+      textSpans.push(
+        '<tspan x="',
+          lineLeftOffset, '" ',
+          (i === 0 || this.useNative ? 'y' : 'dy'), '="',
+          toFixed(this.useNative
+            ? ((lineHeight * i) - this.height / 2)
+            : (lineHeight * lineTopOffsetMultiplier), 2) , '" ',
+          // doing this on <tspan> elements since setting opacity
+          // on containing <text> one doesn't work in Illustrator
+          this._getFillAttributes(this.fill), '>',
+          fabric.util.string.escapeXml(textLine),
+        '</tspan>'
+      );
+    },
+
+    _setSVGTextLineBg: function(textBgRects, i, textLeftOffset, lineHeight) {
+      textBgRects.push(
+        '<rect ',
+          this._getFillAttributes(this.textBackgroundColor),
+          ' x="',
+          toFixed(textLeftOffset + this._boundaries[i].left, 2),
+          '" y="',
+          /* an offset that seems to straighten things out */
+          toFixed((lineHeight * i) - this.height / 2, 2),
+          '" width="',
+          toFixed(this._boundaries[i].width, 2),
+          '" height="',
+          toFixed(this._boundaries[i].height, 2),
+        '"></rect>');
+    },
+
+    _setSVGBg: function(textBgRects) {
       if (this.backgroundColor && this._boundaries) {
         textBgRects.push(
           '<rect ',
@@ -912,49 +994,6 @@
             toFixed(this.height, 2),
           '"></rect>');
       }
-
-      // text and text-background
-      for (i = 0, len = textLines.length; i < len; i++) {
-        if (textLines[i] !== '') {
-          lineLeftOffset = (this._boundaries && this._boundaries[i]) ? toFixed(this._boundaries[i].left, 2) : 0;
-          textSpans.push(
-            '<tspan x="',
-              lineLeftOffset, '" ',
-              (i === 0 || this.useNative ? 'y' : 'dy'), '="',
-              toFixed(this.useNative ? ((lineTopOffset * i) - this.height / 2) : (lineTopOffset * lineTopOffsetMultiplier), 2) , '" ',
-              // doing this on <tspan> elements since setting opacity on containing <text> one doesn't work in Illustrator
-              this._getFillAttributes(this.fill), '>',
-              fabric.util.string.escapeXml(textLines[i]),
-            '</tspan>'
-          );
-          lineTopOffsetMultiplier = 1;
-        }
-        else {
-          // in some environments (e.g. IE 7 & 8) empty tspans are completely ignored, using a lineTopOffsetMultiplier
-          // prevents empty tspans
-          lineTopOffsetMultiplier++;
-        }
-
-        if (!this.textBackgroundColor || !this._boundaries) continue;
-
-        textBgRects.push(
-          '<rect ',
-            this._getFillAttributes(this.textBackgroundColor),
-            ' x="',
-            toFixed(textLeftOffset + this._boundaries[i].left, 2),
-            '" y="',
-            /* an offset that seems to straighten things out */
-            toFixed((lineTopOffset * i) - this.height / 2, 2),
-            '" width="',
-            toFixed(this._boundaries[i].width, 2),
-            '" height="',
-            toFixed(this._boundaries[i].height, 2),
-          '"></rect>');
-      }
-      return {
-        textSpans: textSpans,
-        textBgRects: textBgRects
-      };
     },
 
     /**
