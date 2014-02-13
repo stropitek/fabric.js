@@ -155,14 +155,34 @@
      */
     toSVG: function(reviver) {
       var markup = this._createBaseSVGMarkup();
-
+      var x1,x2,y1,y2;
+      var transf = [];
+      transf.push(
+        '" transform="rotate(',
+        parseInt(this.angle),',',
+        parseInt(this.left),',',
+        parseInt(this.top),')'
+      );
+      if(this.x1 <= this.x2 && this.y1 <= this.y2 || this.x1 <= this.x2 && this.y1 <= this.y2) {
+        x1 = parseInt(this.left - this.width*this.scaleX/2);
+        x2 = parseInt(this.left + this.width*this.scaleX/2);
+        y1 = parseInt(this.top - this.height*this.scaleY/2);
+        y2 = parseInt(this.top + this.height*this.scaleY/2)
+      }
+      else {
+        x1 = parseInt(this.left - this.width*this.scaleX/2);
+        x2 = parseInt(this.left + this.width*this.scaleX/2);
+        y1 = parseInt(this.top + this.height*this.scaleY/2);
+        y2 = parseInt(this.top - this.height*this.scaleY/2);
+      }
       markup.push(
         '<line ',
-          'x1="', this.get('x1'),
-          '" y1="', this.get('y1'),
-          '" x2="', this.get('x2'),
-          '" y2="', this.get('y2'),
+          'x1="', x1,
+          '" y1="', y1,
+          '" x2="', x2,
+          '" y2="', y2,
           '" style="', this.getSvgStyles(),
+          transf.join(''),
         '"/>'
       );
 
