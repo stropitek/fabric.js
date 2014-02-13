@@ -312,7 +312,7 @@
       this.canvas.renderAll();
 
       // fire event 'path' created
-      this.canvas.fire('path:created', { path: path });
+      this.canvas.fire('ext:path:created', { path: path });
     }
   });
 })();
